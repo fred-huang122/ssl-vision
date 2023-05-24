@@ -1059,7 +1059,7 @@ void GLLUTWidget::drawSample(int i, int x, int y) {
     }
 }
 
-void GLLUTWidget::sampleImage(const RawImage & img) {
+void GLLUTWidget::sampleImage(const RawImage & img, ConvexHullImageMask & mask) {
   //compute slice it sits on:
   ColorFormat source_format=img.getColorFormat();
 
@@ -1072,15 +1072,18 @@ void GLLUTWidget::sampleImage(const RawImage & img) {
     if (source_format==COLOR_RGB8) {
       rgbImage rgb_img(img);
       rgb * color_rgb=rgb_img.getPixelData();
+      raw8 * mask_pixel = mask.getMask().getPixelData();
       for (int j=0;j<n;j++) {
         color=Conversions::rgb2yuv(*color_rgb);
         i=_lut->norm2lutX(color.y);
-        if (i >= 0 && i < (int)slices.size()) {
+
+        if (i >= 0 && i < (int)slices.size() && *mask_pixel != 0) {
           drawSample(i,_lut->norm2lutY(color.u),_lut->norm2lutZ(color.v));
           //slices[i]->sampler->surface.setPixel(_lut->norm2lutY(color.u),_lut->norm2lutZ(color.v),rgba(255,255,255,255));
           slices[i]->sampler_update_pending=true;
         }
         color_rgb++;
+        mask_pixel++;
       }
     } else if (source_format==COLOR_YUV444) {
       yuvImage yuv_img(img);
